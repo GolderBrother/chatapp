@@ -654,10 +654,10 @@ function MessageInput(props: {
     props.onSubmit(createMessage('user', messageInput), needGenerating)
     setMessageInput('')
   }
-  // 处理键盘快捷键事件。当用户按下 Ctrl/Cmd + L 键时，聚焦输入框
+  // 处理键盘快捷键事件。当用户按下 Ctrl/Cmd + i 键时，聚焦输入框
   useEffect(() => {
     function keyboardShortcut(e: KeyboardEvent) {
-      if (e.key === 'l' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'i' && (e.metaKey || e.ctrlKey)) {
         document.getElementById('message-input')?.focus();
       }
     }
