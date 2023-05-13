@@ -328,7 +328,7 @@ function Main() {
                   width: '35px',
                   height: '35px',
                   marginRight: '5px',
-                }} 
+                }}
                 src={logo}
               />
               <Typography variant="h5" color="inherit" component="div">
@@ -631,7 +631,6 @@ function Main() {
     </Box >
   );
 }
-
 function MessageInput(props: {
   onSubmit: (newMsg: Message, needGenerating?: boolean) => void
   quoteCache: string
@@ -642,12 +641,12 @@ function MessageInput(props: {
   const [messageInput, setMessageInput] = useState('')
   useEffect(() => {
     if (props.quoteCache !== '') {
-        setMessageInput(props.quoteCache)
-        props.setQuotaCache('')
-        document.getElementById('message-input')?.focus()
+      setMessageInput(props.quoteCache)
+      props.setQuotaCache('')
+      document.getElementById('message-input')?.focus()
     }
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [props.quoteCache]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.quoteCache]);
   const submit = (needGenerating = true) => {
     if (messageInput.length === 0) {
       return
@@ -655,6 +654,18 @@ function MessageInput(props: {
     props.onSubmit(createMessage('user', messageInput), needGenerating)
     setMessageInput('')
   }
+  // 处理键盘快捷键事件。当用户按下 Ctrl/Cmd + L 键时，聚焦输入框
+  useEffect(() => {
+    function keyboardShortcut(e: KeyboardEvent) {
+      if (e.key === 'l' && (e.metaKey || e.ctrlKey)) {
+        document.getElementById('message-input')?.focus();
+      }
+    }
+    window.addEventListener('keydown', keyboardShortcut);
+    return () => {
+      window.removeEventListener('keydown', keyboardShortcut)
+    }
+  }, [])
   return (
     <form onSubmit={(e) => {
       e.preventDefault()
