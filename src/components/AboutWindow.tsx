@@ -4,7 +4,7 @@ import {
   Dialog, DialogContent, DialogActions, DialogTitle, DialogContentText, TextField, Stack,
 } from '@mui/material';
 import iconPNG from '../assets/logo.svg';
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import * as api from '../api'
 
 interface Props {
@@ -25,11 +25,11 @@ export default function AboutWindow(props: Props) {
         <Box sx={{ textAlign: 'center' }}>
           <img alt="Chatapp" src={iconPNG} style={{ width: '100px' }} />
           <h3>Chatapp(v{props.version})</h3>
-          <p>
-            {t('Your Ultimate Copilot on the Desktop. Chatapp is a free and open-source desktop application and devtools for GPT. Made by')}
-            <a href={`https://chatappapp.xyz/redirect_app/author/${props.lang}`} target='_blank' rel="noreferrer"> jamesezhang </a>
-            {t('and the community.')}
-          </p>
+          <Trans 
+              i18nKey="About Message"
+              values={{ Author: "jamesezhang" }}
+              components={[<a href={`https://chatapp.xyz/redirect_app/author/${props.lang}`} target='_blank' rel="noreferrer"></a>]}
+          />
         </Box>
         <Stack spacing={2} direction="row" sx={{ justifyContent: 'center', marginTop: '30px' }}>
           <Badge color="primary" variant="dot" invisible={false}>
@@ -56,7 +56,7 @@ export default function AboutWindow(props: Props) {
           </Button>
         </Stack>
         <Paper elevation={3} sx={{ padding: '5px 20px', backgroundColor: 'paper', marginTop: '30px' }}>
-          <p>{t("I made Chatapp for my own use and it's great to see so many people enjoying it! If you'd like to support development, a donation would be greatly appreciated, though it is entirely optional. Many thanks, Benn")}</p>
+          <span>{t("Auther Message")}</span>
           <Stack spacing={2} direction="row">
             <Button variant="text" onClick={() => api.openLink(`${DOC_BASE_URL}/donate/${props.lang}`)} >
               {t('Donate')}
