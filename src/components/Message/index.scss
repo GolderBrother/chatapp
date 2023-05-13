@@ -1,6 +1,9 @@
 .msg-block {
-  .msg-content p {
-    margin: 0.6rem 0 0.4rem 0;
+
+  &.user-msg {
+    .msg-content p {
+      margin: 0.6rem 0 0.4rem 0;
+    }
   }
 
   .msg-content ol {
@@ -20,6 +23,7 @@
 // markdown table
 html[data-theme='light'] .msg-block {
   --color-fg-default: #24292f;
+
   table {
     background-color: #f8f8f8;
     margin: 0 auto;
@@ -54,6 +58,7 @@ html[data-theme='light'] .msg-block {
 
 html[data-theme='dark'] .msg-block {
   --color-fg-default: #c9d1d9;
+
   table {
     background-color: #333;
     color: #fff;
