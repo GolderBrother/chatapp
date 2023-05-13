@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import MessageBlock from './components/Message'
 import * as client from './api/chat'
 import SessionItem from './components/SessionItem'
@@ -337,6 +337,10 @@ function Main() {
     }
   }
 
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const handleTextareaFocus = useCallback(() => {
+    textareaRef?.current?.focus();
+  }, []);
   return (
     <Box className='App'>
       <Grid container sx={{
@@ -414,7 +418,7 @@ function Main() {
                             session={session}
                             switchMe={() => {
                               store.switchCurrentSession(session)
-                              document.getElementById('message-input')?.focus() // better way?
+                              handleTextareaFocus();
                             }}
                             deleteMe={() => store.deleteChatSession(session)}
                             copyMe={() => {
@@ -620,6 +624,7 @@ function Main() {
                 </IconButton>
               </ButtonGroup>)}
               <MessageInput
+                textareaRef={textareaRef}
                 quoteCache={quoteCache}
                 setQuotaCache={setQuoteCache}
                 onSubmit={async (newUserMsg: Message, needGenerating = true) => {
@@ -703,14 +708,18 @@ function MessageInput(props: {
   onSubmit: (newMsg: Message, needGenerating?: boolean) => void
   quoteCache: string
   setQuotaCache(cache: string): void
+  textareaRef: MutableRefObject<HTMLTextAreaElement | null>
 }) {
   const { t } = useTranslation()
   const [messageInput, setMessageInput] = useState('')
+  const onTextareaFocus = useCallback(() => {
+    props.textareaRef?.current?.focus()
+  }, [props.textareaRef]);
   useEffect(() => {
     if (props.quoteCache !== '') {
       setMessageInput(props.quoteCache)
       props.setQuotaCache('')
-      document.getElementById('message-input')?.focus()
+      onTextareaFocus()
     }
   }, [props.quoteCache])
   const submit = (needGenerating = true) => {
@@ -723,7 +732,7 @@ function MessageInput(props: {
   useEffect(() => {
     function keyboardShortcut(e: KeyboardEvent) {
       if (e.key === 'i' && (e.metaKey || e.ctrlKey)) {
-        document.getElementById('message-input')?.focus();
+        onTextareaFocus()
       }
     }
     window.addEventListener('keydown', keyboardShortcut);
@@ -740,6 +749,7 @@ function MessageInput(props: {
         <Grid container spacing={2}>
           <Grid item xs>
             <TextField
+              inputRef={props.textareaRef}
               multiline
               label="Prompt"
               value={messageInput}

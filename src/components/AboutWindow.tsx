@@ -27,7 +27,7 @@ export default function AboutWindow(props: Props) {
           <h3>Chatapp(v{props.version})</h3>
           <Trans 
               i18nKey="About Message"
-              values={{ Author: "jamesezhang" }}
+              values={{ Author: "GolderBrother" }}
               components={[<a href={`https://chatapp.xyz/redirect_app/author/${props.lang}`} target='_blank' rel="noreferrer"></a>]}
           />
         </Box>

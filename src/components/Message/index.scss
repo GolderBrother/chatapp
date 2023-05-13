@@ -1,7 +1,6 @@
 .msg-block {
   .msg-content p {
     margin: 0.6rem 0 0.4rem 0;
-    color: #333;
   }
 
   .msg-content ol {
@@ -14,11 +13,13 @@
 
   .msg-content img {
     width: 100%;
+    max-width: 40rem;
   }
 }
 
 // markdown table
 html[data-theme='light'] .msg-block {
+  --color-fg-default: #24292f;
   table {
     background-color: #f8f8f8;
     margin: 0 auto;
@@ -45,9 +46,14 @@ html[data-theme='light'] .msg-block {
   table tr:nth-child(even) {
     background-color: #f2f2f2;
   }
+
+  .msg-content p {
+    color: var(--color-fg-default);
+  }
 }
 
 html[data-theme='dark'] .msg-block {
+  --color-fg-default: #c9d1d9;
   table {
     background-color: #333;
     color: #fff;
@@ -74,6 +80,10 @@ html[data-theme='dark'] .msg-block {
   table tr:nth-child(even) {
     background-color: #444;
   }
+
+  .msg-content p {
+    color: var(--color-fg-default);
+  }
 }
 
 // code block
@@ -84,7 +94,7 @@ html[data-theme='dark'] .msg-block {
 .code-header {
   margin: 0;
   background-color: #333;
-  color: white;
+  color: #fff;
   font-size: 12px;
   display: flex;
   justify-content: space-between;
