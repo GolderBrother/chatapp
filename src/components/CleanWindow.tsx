@@ -23,8 +23,7 @@ function CleanWindow(props: Props) {
       <DialogTitle>{t('clean')}</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {t('this action will permanently delete all non-system messages in')} [{props.session.name}] {t('clean alert end')}
-          {t('are you sure you want to continue?')}
+          {t('delete confirmation', {sessionName:props.session.name })}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
