@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import MessageBlock from './components/Message'
-import * as chat from './api/chat';
+import * as client from './api/chat'
 import SessionItem from './components/SessionItem'
 import {
-  Toolbar, Box, Badge, Snackbar, Chip,
+  Toolbar, Box, Badge, Snackbar,
   List, ListSubheader, ListItemText, MenuList,
-  IconButton, Button, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
-  TextField,
+  IconButton, Button, ButtonGroup, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
+  TextField, useTheme, useMediaQuery, debounce,
 } from '@mui/material';
-import { Session, Message, SponsorAd } from './types'
+import { Session, Message } from './types'
+import { createSession, createMessage } from './components/Message/utils';
 import useStore from './store'
 import SettingWindow from './components/SettingWindow'
 import ChatConfigWindow from './components/ChatConfigWindow'
@@ -19,17 +20,21 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import * as prompts from './prompts';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import Save from '@mui/icons-material/Save'
-import CleanWidnow from './components/CleanWindow';
+import CleanWindow from './components/CleanWindow';
 import AboutWindow from './components/AboutWindow';
-import * as api from './api';
 import { ThemeSwitcherProvider } from './theme/ThemeSwitcher';
 import { useTranslation } from "react-i18next";
 import logo from './assets/logo.svg';
 import { save } from '@tauri-apps/api/dialog';
 import { writeTextFile } from '@tauri-apps/api/fs';
-import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import * as remote from './remote'
+// import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+// import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import FormatIndentIncreaseOutlinedIcon from '@mui/icons-material/FormatIndentIncreaseOutlined';
+import FormatIndentDecreaseOutlinedIcon from '@mui/icons-material/FormatIndentDecreaseOutlined';
+import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
+import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
+// import * as remote from './remote'
+import SponsorChip from './components/SponsorChip'
 import "./styles/App.scss"
 
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -50,7 +55,6 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableItem } from './components/SortableItem';
-import { createMessage, createSession } from './components/Message/utils';
 
 function Main() {
   const { t } = useTranslation()
@@ -86,7 +90,6 @@ function Main() {
     }
   }
 
-
   // 是否展示设置窗口
   const [openSettingWindow, setOpenSettingWindow] = React.useState(false);
   useEffect(() => {
@@ -97,6 +100,11 @@ function Main() {
 
   // 是否展示相关信息的窗口
   const [openAboutWindow, setOpenAboutWindow] = React.useState(false);
+
+  // 是否展示菜单栏
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const [showMenu, setShowMenu] = React.useState(!isSmallScreen);
 
   const messageListRef = useRef<HTMLDivElement>(null)
   const messageScrollRef = useRef<{ msgId: string, smooth?: boolean } | null>(null)
@@ -140,31 +148,51 @@ function Main() {
 
   // 切换到当前会话，自动滚动到最后一条消息
   useEffect(() => {
+    messageListToBottom();
+  }, [store.currentSession.id])
+
+  // 当用户滚动页面时，显示一个“回到顶部”或“回到底部”的按钮。
+  const [atScrollTop, setAtScrollTop] = React.useState(false);
+  const [atScrollBottom, setAtScrollBottom] = React.useState(false);
+  const [needScroll, setNeedScroll] = React.useState(false);
+  useEffect(() => {
     if (!messageListRef.current) {
       return
     }
-    messageListRef.current.scrollTop = messageListRef.current.scrollHeight
-  }, [store.currentSession.id])
-
-  const generateName = useCallback(async (session: Session) => {
-    chat.replay(
-      store.settings.openaiKey,
-      store.settings.apiHost,
-      store.settings.maxContextSize,
-      store.settings.maxTokens,
-      store.settings.model,
-      store.settings.temperature,
-      prompts.nameConversation(session.messages.slice(0, 3)),
-      ({ text: name }) => {
-        name = name.replace(/['"“”]/g, '')
-        session.name = name
-        store.updateChatSession(session)
-      },
-      (err) => {
-        console.log(err)
+    const handleScroll = () => {
+      if (!messageListRef.current) {
+        return
       }
-    )
+      const { scrollTop, scrollHeight, clientHeight } = messageListRef.current;
+      if (scrollTop === 0) {
+        setAtScrollTop(true);
+        setAtScrollBottom(false);
+      } else if (scrollTop + clientHeight === scrollHeight) {
+        setAtScrollTop(false);
+        setAtScrollBottom(true);
+      } else {
+        setAtScrollTop(false);
+        setAtScrollBottom(false);
+      }
+      setNeedScroll(scrollHeight > clientHeight);
+    };
+
+    handleScroll();
+    messageListRef.current.addEventListener("scroll", debounce(handleScroll, 100));
   }, []);
+  const messageListToTop = () => {
+    if (!messageListRef.current) {
+      return
+    }
+    messageListRef.current.scrollTop = 0;
+  };
+  const messageListToBottom = () => {
+    if (!messageListRef.current) {
+      return
+    }
+    messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+  };
+
   // 会话名称自动生成
   useEffect(() => {
     if (
@@ -173,8 +201,7 @@ function Main() {
     ) {
       generateName(store.currentSession)
     }
-  }, [generateName, store.currentSession, store.currentSession.messages])
-  // }, [generateName, store.currentSession, store.currentSession.messages])
+  }, [store.currentSession.messages])
 
   const codeBlockCopyEvent = useRef((e: Event) => {
     const target: HTMLElement = e.target as HTMLElement;
@@ -212,6 +239,25 @@ function Main() {
   const editCurrentSession = () => {
     setConfigureChatConfig(store?.currentSession)
   };
+  const generateName = async (session: Session) => {
+    await client.replay(
+      store.settings.openaiKey,
+      store.settings.apiHost,
+      store.settings.maxContextSize,
+      store.settings.maxTokens,
+      store.settings.model,
+      store.settings.temperature,
+      prompts.nameConversation(session.messages.slice(0, 3)),
+      ({ text: name }) => {
+        name = name.replace(/['"“”]/g, '')
+        session.name = name
+        store.updateChatSession(session)
+      },
+      (err) => {
+        console.log(err)
+      }
+    )
+  }
   const saveSession = async (session: Session) => {
     const filePath = await save({
       filters: [{
@@ -229,7 +275,7 @@ function Main() {
 
   const generate = async (session: Session, promptMsgs: Message[], targetMsg: Message) => {
     messageScrollRef.current = { msgId: targetMsg.id, smooth: false }
-    await chat.replay(
+    await client.replay(
       store.settings.openaiKey,
       store.settings.apiHost,
       store.settings.maxContextSize,
@@ -280,6 +326,7 @@ function Main() {
 
     messageScrollRef.current = null
   }
+
   const [quoteCache, setQuoteCache] = useState('')
 
   const sessionListRef = useRef<HTMLDivElement>(null)
@@ -290,216 +337,216 @@ function Main() {
     }
   }
 
-  const [showSponsorAD, setShowSponsorAD] = useState(true)
-  const [sponsorAD, setSponsorAD] = useState<SponsorAd | null>(null)
-  useEffect(() => {
-    (async () => {
-      const ad = await remote.getSponsorAd()
-      setSponsorAD(ad)
-    })()
-  }, [store.currentSession.id])
-
   return (
     <Box className='App'>
       <Grid container sx={{
-        flexWrap: 'nowrap',
         height: '100%',
       }}>
-        <Grid item
-          sx={{
-            height: '100%',
-            maxWidth: '210px',
-          }}
-        >
-          <Stack
+        {showMenu && (
+          <Grid item
             sx={{
               height: '100%',
-              padding: '20px 0',
+              [theme.breakpoints.down("sm")]: {
+                position: 'absolute',
+                zIndex: 100,
+                left: '20px',
+                right: 0,
+                bottom: 0,
+                top: 0,
+              },
             }}
-            spacing={2}
           >
-            <Toolbar variant="dense" sx={{
-              display: "flex",
-              alignItems: "flex-end",
-            }} >
-              <img
-                alt="logo"
-                style={{
+            <Stack
+              className='ToolBar'
+              sx={{
+                width: '210px',
+                height: '100%',
+                [theme.breakpoints.down("sm")]: {
+                  position: 'absolute',
+                  zIndex: 1,
+                },
+              }}
+              spacing={2}
+            >
+              <Toolbar variant="dense" sx={{
+                display: "flex",
+                alignItems: "flex-end",
+              }} >
+                <img src={logo} style={{
                   width: '35px',
                   height: '35px',
                   marginRight: '5px',
+                }} />
+                <Typography variant="h5" color="inherit" component="div">
+                  Chatapp
+                </Typography>
+              </Toolbar>
+
+              <MenuList
+                sx={{
+                  width: '100%',
+                  position: 'relative',
+                  overflow: 'auto',
+                  height: '60vh',
+                  '& ul': { padding: 0 },
                 }}
-                src={logo}
-              />
-              <Typography variant="h5" color="inherit" component="div">
-                Chatapp
-              </Typography>
-            </Toolbar>
+                className="scroll"
+                subheader={
+                  <ListSubheader component="div">
+                    {t('chat')}
+                  </ListSubheader>
+                }
+                component="div"
+                ref={sessionListRef}
+              >
+                <DndContext
+                  modifiers={[restrictToVerticalAxis]}
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={sortedSessions} strategy={verticalListSortingStrategy}>
+                    {
+                      sortedSessions.map((session, ix) => (
+                        <SortableItem key={session.id} id={session.id}>
+                          <SessionItem key={session.id}
+                            selected={store.currentSession.id === session.id}
+                            session={session}
+                            switchMe={() => {
+                              store.switchCurrentSession(session)
+                              document.getElementById('message-input')?.focus() // better way?
+                            }}
+                            deleteMe={() => store.deleteChatSession(session)}
+                            copyMe={() => {
+                              const newSession = createSession(session.name + ' copied')
+                              newSession.messages = session.messages
+                              store.createChatSession(newSession, ix)
+                            }}
+                            switchStarred={() => {
+                              store.updateChatSession({
+                                ...session,
+                                starred: !session.starred
+                              })
+                            }}
+                            editMe={() => setConfigureChatConfig(session)}
+                          />
+                        </SortableItem>
+                      ))
+                    }
+                  </SortableContext>
+                </DndContext>
+              </MenuList>
 
-            <MenuList
+              <Divider />
+
+              <MenuList>
+                <MenuItem onClick={handleCreateNewSession} >
+                  <ListItemIcon>
+                    <IconButton><AddIcon fontSize="small" /></IconButton>
+                  </ListItemIcon>
+                  <ListItemText>
+                    {t('new chat')}
+                  </ListItemText>
+                  <Typography variant="body2" color="text.secondary">
+                    {/* ⌘N */}
+                  </Typography>
+                </MenuItem>
+                <MenuItem onClick={() => {
+                  setOpenSettingWindow(true)
+                }}
+                >
+                  <ListItemIcon>
+                    <IconButton><SettingsIcon fontSize="small" /></IconButton>
+                  </ListItemIcon>
+                  <ListItemText>
+                    {t('settings')}
+                  </ListItemText>
+                  <Typography variant="body2" color="text.secondary">
+                    {/* ⌘N */}
+                  </Typography>
+                </MenuItem>
+
+                <MenuItem onClick={() => setOpenAboutWindow(true)}>
+                  <ListItemIcon>
+                    <IconButton>
+                      <InfoOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Badge color="primary" variant="dot" invisible={!store.needCheckUpdate}
+                      sx={{ paddingRight: '8px' }} >
+                      <Typography sx={{ opacity: 0.5 }}>
+                        {t('About')} ({store.version})
+                      </Typography>
+                    </Badge>
+                  </ListItemText>
+                </MenuItem>
+              </MenuList>
+            </Stack>
+            <Box
+              onClick={() => setShowMenu(false)}
               sx={{
-                width: '100%',
-                position: 'relative',
-                overflow: 'auto',
-                height: '60vh',
-                '& ul': { padding: 0 },
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                [theme.breakpoints.up("sm")]: {
+                  display: 'none',
+                },
               }}
-              className="scroll"
-              subheader={
-                <ListSubheader component="div">
-                  {t('chat')}
-                </ListSubheader>
-              }
-              component="div"
-              ref={sessionListRef}
-            >
-              <DndContext
-                modifiers={[restrictToVerticalAxis]}
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={sortedSessions} strategy={verticalListSortingStrategy}>
-                  {
-                    sortedSessions.map((session, ix) => (
-                      <SortableItem key={session.id} id={session.id}>
-                        <SessionItem key={session.id}
-                          selected={store.currentSession.id === session.id}
-                          session={session}
-                          switchMe={() => {
-                            store.switchCurrentSession(session)
-                            document.getElementById('message-input')?.focus() // better way?
-                          }}
-                          deleteMe={() => store.deleteChatSession(session)}
-                          copyMe={() => {
-                            const newSession = createSession(session.name + ' copied')
-                            newSession.messages = session.messages
-                            store.createChatSession(newSession, ix)
-                          }}
-                          switchStarred={() => {
-                            store.updateChatSession({
-                              ...session,
-                              starred: !session.starred
-                            })
-                          }}
-                          editMe={() => setConfigureChatConfig(session)}
-                        />
-                      </SortableItem>
-                    ))
-                  }
-                </SortableContext>
-              </DndContext>
-            </MenuList>
-            <Divider />
-            <MenuList>
-              <MenuItem onClick={handleCreateNewSession} >
-                <ListItemIcon>
-                  <IconButton><AddIcon fontSize="small" /></IconButton>
-                </ListItemIcon>
-                <ListItemText>
-                  {t('new chat')}
-                </ListItemText>
-                <Typography variant="body2" color="text.secondary">
-                  {/* ⌘N */}
-                </Typography>
-              </MenuItem>
-              <MenuItem onClick={() => {
-                setOpenSettingWindow(true)
-              }}
-              >
-                <ListItemIcon>
-                  <IconButton><SettingsIcon fontSize="small" /></IconButton>
-                </ListItemIcon>
-                <ListItemText>
-                  {t('settings')}
-                </ListItemText>
-                <Typography variant="body2" color="text.secondary">
-                  {/* ⌘N */}
-                </Typography>
-              </MenuItem>
-
-              <MenuItem onClick={() => setOpenAboutWindow(true)}>
-                <ListItemIcon>
-                  <IconButton>
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </ListItemIcon>
-                <ListItemText>
-                  <Badge color="primary" variant="dot" invisible={!store.needCheckUpdate}
-                    sx={{ paddingRight: '8px' }} >
-                    <Typography sx={{ opacity: 0.5 }}>
-                      {t('About')} ({store.version})
-                    </Typography>
-                  </Badge>
-                </ListItemText>
-              </MenuItem>
-            </MenuList>
-          </Stack>
-        </Grid>
+            ></Box>
+          </Grid>)}
         <Grid item xs
           sx={{
+            width: '0px',
             height: '100%',
           }}
         >
           <Stack sx={{
             height: '100%',
-            padding: '20px 0',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
+            position: 'relative',
           }} >
-            <Box>
-              <Toolbar>
-                <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}>
-                  <ChatBubbleOutlineOutlinedIcon />
-                </IconButton>
-                <Typography variant="h6" color="inherit" component="div" noWrap sx={{ flexGrow: 1 }}>
-                  <span onClick={() => { editCurrentSession() }} style={{ cursor: 'pointer' }}>
-                    {store.currentSession.name}
-                  </span>
-                </Typography>
+            <Toolbar>
+              <IconButton onClick={() => setShowMenu(!showMenu)}>
                 {
-                  showSponsorAD && sponsorAD && (
-                    <Chip size='small'
-                      sx={{
-                        maxWidth: '400px',
-                        height: 'auto',
-                        '& .MuiChip-label': {
-                          display: 'block',
-                          whiteSpace: 'normal',
-                        },
-                        borderRadius: '8px',
-                        marginRight: '25px',
-                        opacity: 0.6,
-                      }}
-                      icon={<CampaignOutlinedIcon />}
-                      deleteIcon={<CancelOutlinedIcon />}
-                      onDelete={() => setShowSponsorAD(false)}
-                      onClick={() => api.openLink(sponsorAD.url)}
-                      label={sponsorAD.text}
-                    />
-                  )
+                  showMenu ? <FormatIndentDecreaseOutlinedIcon /> : <FormatIndentIncreaseOutlinedIcon />
                 }
-                <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
-                  onClick={() => setSessionClean(store.currentSession)}
-                >
-                  <CleaningServicesIcon />
-                </IconButton>
-                <IconButton edge="start" color="inherit" aria-label="menu" sx={{}}
-                  onClick={() => saveSession(store.currentSession)}
-                >
-                  <Save />
-                </IconButton>
-              </Toolbar>
-            </Box>
+              </IconButton>
+              <IconButton edge="start" color="inherit" aria-label="menu" sx={{ ml: 1 }}>
+                <ChatBubbleOutlineOutlinedIcon />
+              </IconButton>
+              <Typography variant="h6" color="inherit" component="div" noWrap
+                sx={{
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                <span onClick={() => { editCurrentSession() }} style={{ cursor: 'pointer' }}>
+                  {store.currentSession.name}
+                </span>
+              </Typography>
+              <SponsorChip sessionId={store.currentSession.id} />
+              <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}
+                onClick={() => setSessionClean(store.currentSession)}
+              >
+                <CleaningServicesIcon />
+              </IconButton>
+              <IconButton edge="start" color="inherit" aria-label="menu" sx={{}}
+                onClick={() => saveSession(store.currentSession)}
+              >
+                <Save />
+              </IconButton>
+            </Toolbar>
             <List
               className='scroll'
               sx={{
-                width: '100%',
                 bgcolor: 'background.paper',
                 overflow: 'auto',
                 '& ul': { padding: 0 },
-                flexGrow: 2,
+                height: '100%',
               }}
               component="div"
               ref={messageListRef}
@@ -551,7 +598,27 @@ function Main() {
                 ))
               }
             </List>
-            <Box sx={{ padding: '20px 0' }}>
+            <Box sx={{ padding: '20px 0', position: 'relative', }}>
+              {(needScroll && <ButtonGroup
+                sx={{
+                  position: 'absolute',
+                  right: '0.2rem',
+                  top: '-5.5rem',
+                  opacity: 0.6,
+                }}
+                orientation="vertical"
+              >
+                <IconButton
+                  onClick={() => messageListToTop()}
+                  sx={{ visibility: atScrollTop ? "hidden" : "visible", }}>
+                  <ArrowCircleUpIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => messageListToBottom()}
+                  sx={{ visibility: atScrollBottom ? "hidden" : "visible", }}>
+                  <ArrowCircleDownIcon />
+                </IconButton>
+              </ButtonGroup>)}
               <MessageInput
                 quoteCache={quoteCache}
                 setQuotaCache={setQuoteCache}
@@ -602,7 +669,7 @@ function Main() {
         }
         {
           sessionClean !== null && (
-            <CleanWidnow open={sessionClean !== null}
+            <CleanWindow open={sessionClean !== null}
               session={sessionClean}
               save={(session) => {
                 sessionClean.messages.forEach((msg) => {
@@ -631,13 +698,13 @@ function Main() {
     </Box >
   );
 }
+
 function MessageInput(props: {
   onSubmit: (newMsg: Message, needGenerating?: boolean) => void
   quoteCache: string
   setQuotaCache(cache: string): void
 }) {
   const { t } = useTranslation()
-  // const { messageInput, setMessageInput } = props
   const [messageInput, setMessageInput] = useState('')
   useEffect(() => {
     if (props.quoteCache !== '') {
@@ -645,16 +712,14 @@ function MessageInput(props: {
       props.setQuotaCache('')
       document.getElementById('message-input')?.focus()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.quoteCache]);
+  }, [props.quoteCache])
   const submit = (needGenerating = true) => {
-    if (messageInput.length === 0) {
+    if (messageInput.trim() === '') {
       return
     }
     props.onSubmit(createMessage('user', messageInput), needGenerating)
     setMessageInput('')
   }
-  // 处理键盘快捷键事件。当用户按下 Ctrl/Cmd + i 键时，聚焦输入框
   useEffect(() => {
     function keyboardShortcut(e: KeyboardEvent) {
       if (e.key === 'i' && (e.metaKey || e.ctrlKey)) {
@@ -683,7 +748,6 @@ function MessageInput(props: {
               maxRows={12}
               autoFocus
               id='message-input'
-              placeholder='请输入prompt'
               onKeyDown={(event) => {
                 if (event.keyCode === 13 && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
                   event.preventDefault()
@@ -698,7 +762,7 @@ function MessageInput(props: {
               }}
             />
           </Grid>
-          <Grid item xs="auto">
+          <Grid item xs='auto'>
             <Button type='submit' variant="contained" size='large'
               style={{ fontSize: '16px', padding: '10px 20px' }}>
               {t('send')}
