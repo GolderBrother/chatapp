@@ -7,6 +7,8 @@ import * as api from '../api'
 import * as remote from '../remote'
 import { useTranslation } from "react-i18next";
 import { createSession } from '../components/Message/utils';
+import { DEFAULT_MODEL } from '../contants/model';
+import { DEFAULT_SESSION_TITLE } from '../contants/defaults';
 
 // setting store
 
@@ -14,7 +16,7 @@ export function getDefaultSettings(): Settings {
   return {
     openaiKey: '',
     apiHost: 'https://api.openai.com',
-    model: "gpt-3.5-turbo",
+    model: DEFAULT_MODEL,
     temperature: 0.7,
     maxContextSize: "4000",
     maxTokens: "2048",
@@ -171,8 +173,39 @@ export default function useStore() {
     setSessions(sessions)
     switchCurrentSession(session)
   }
+  const getSessionInfo = (model: string = DEFAULT_MODEL) => {
+    const sessionInfo = {
+      icon: '',
+      title: DEFAULT_SESSION_TITLE,
+      midTitle: ''
+    };
+    switch(model) {
+      case 'gpt-3.5-turbo':
+        sessionInfo.title = 'chatgpt(3.5)';
+        break
+      case 'gpt-3.5-turbo-0301':
+        sessionInfo.title = 'chatgpt(3.5-0301)';
+        break
+      case 'gpt-4':
+        sessionInfo.title = 'gpt4';
+        break
+      case 'gpt-4-0314':
+        sessionInfo.title = 'gpt4(0314)';
+        break
+      case 'gpt-4-32k':
+        sessionInfo.title = 'gpt4(32k)';
+        break
+      case 'gpt-4-32k-0314':
+        sessionInfo.title = 'gpt4(32k-0314)';
+        break
+    }
+    return sessionInfo;
+  }
   const createEmptyChatSession = () => {
-    createChatSession(createSession())
+    createChatSession(createSession({
+      name: getSessionInfo(settings.model).title,
+      model: settings.model
+    }))
   }
 
   const setMessages = (session: Session, messages: Message[]) => {

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   ListItemText, MenuItem, Divider,
   IconButton, Typography, ListItemIcon,
 } from '@mui/material';
-import { Session } from '../types'
+import { Message, Session } from '../types'
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
@@ -40,7 +40,12 @@ export default function SessionItem(props: Props) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
+  const getLastMessage = useCallback(() => {
+    return Array.isArray(session.messages) ? session.messages[session.messages.length - 1] ?? {} : {};
+  }, [session.messages]);
+  const getLastMessageContent = () => {
+    return (getLastMessage() as Message)?.content ?? '';
+  }
   return (
     <MenuItem
       key={session.id}
@@ -62,6 +67,9 @@ export default function SessionItem(props: Props) {
       <ListItemText>
         <Typography variant="inherit" noWrap>
           {session.name}
+        </Typography>
+        <Typography variant="inherit" noWrap>
+          {getLastMessageContent() as string}
         </Typography>
       </ListItemText>
       {

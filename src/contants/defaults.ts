@@ -1,9 +1,11 @@
 import { Session } from '../types'
+import { DEFAULT_MODEL } from './model'
 
 export const sessions: Session[] = [
   {
     "id": "1bc7094f-1248-4b51-8ac8-180a5a1470aa",
     "name": "Random Talk",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "9acc4bde-3510-41fd-b872-666547b8023e",
@@ -20,6 +22,7 @@ export const sessions: Session[] = [
   {
     "id": "c37ffdab-cc1e-4cba-b523-1110a6945e3f",
     "name": "English translator",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "125fa708-ec9c-4941-8c01-f639211bae1c",
@@ -46,6 +49,7 @@ export const sessions: Session[] = [
   {
     "id": "6b774e2e-8163-4cb2-ab8b-73737efefb22",
     "name": "IT Expert",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "31bbbc64-7b91-40e4-850d-91025bb28407",
@@ -62,6 +66,7 @@ export const sessions: Session[] = [
   {
     "id": "8129c8c2-34ae-4108-a1b4-695760f3919f",
     "name": "Software Developer",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "0ecd0b0b-002b-4a61-88a0-cecac228b938",
@@ -78,6 +83,7 @@ export const sessions: Session[] = [
   {
     "id": "effecc50-166c-41f5-8cc9-3223a36cd443",
     "name": "Summarize",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "6a47c421-f9ce-4555-9fcc-ac9fc0d51530",
@@ -99,6 +105,7 @@ export const sessions: Session[] = [
   {
     "id": "66955f18-f335-4cab-a620-e1248277c0bf",
     "name": "私人助理",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "9acc4bde-3510-41fd-b872-666547b8023e",
@@ -120,6 +127,7 @@ export const sessions: Session[] = [
   {
     "id": "94e95d3f-c6fc-48ef-a923-ea4b760deb0f",
     "name": "夸夸机",
+    "model": DEFAULT_MODEL,
     "messages": [
       {
         "id": "9acc4bde-3510-41fd-b872-666547b8023e",
@@ -139,3 +147,4 @@ export const sessions: Session[] = [
     ]
   }
 ]
+export const DEFAULT_SESSION_TITLE = 'chatgpt';

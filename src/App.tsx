@@ -6,7 +6,7 @@ import {
   Toolbar, Box, Badge, Snackbar,
   List, ListSubheader, ListItemText, MenuList,
   IconButton, Button, ButtonGroup, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
-  TextField, useTheme, useMediaQuery, debounce,
+  TextField, useTheme, useMediaQuery, debounce, Select
 } from '@mui/material';
 import { Session, Message } from './types'
 import { createSession, createMessage } from './components/Message/utils';
@@ -36,6 +36,8 @@ import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 // import * as remote from './remote'
 import SponsorChip from './components/SponsorChip'
 import "./styles/App.scss"
+import { DEFAULT_MODEL, Models } from './contants/model';
+
 
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
@@ -280,7 +282,7 @@ function Main() {
       store.settings.apiHost,
       store.settings.maxContextSize,
       store.settings.maxTokens,
-      store.settings.model,
+      session.model ?? store.settings.model,
       store.settings.temperature,
       promptMsgs,
       ({ text, cancel }) => {
@@ -328,7 +330,11 @@ function Main() {
   }
 
   const [quoteCache, setQuoteCache] = useState('')
-
+  const [model, setModel] = useState(DEFAULT_MODEL);
+  const changeModel = (model: string) => {
+    setModel(model);
+    store.setSettings({ ...store.settings, model });
+  };
   const sessionListRef = useRef<HTMLDivElement>(null)
   const handleCreateNewSession = () => {
     store.createEmptyChatSession()
@@ -363,7 +369,7 @@ function Main() {
             <Stack
               className='ToolBar'
               sx={{
-                width: '210px',
+                width: '230px',
                 height: '100%',
                 [theme.breakpoints.down("sm")]: {
                   position: 'absolute',
@@ -376,7 +382,7 @@ function Main() {
                 display: "flex",
                 alignItems: "flex-end",
               }} >
-                <img src={logo} style={{
+                <img alt='logo' src={logo} style={{
                   width: '35px',
                   height: '35px',
                   marginRight: '5px',
@@ -422,7 +428,10 @@ function Main() {
                             }}
                             deleteMe={() => store.deleteChatSession(session)}
                             copyMe={() => {
-                              const newSession = createSession(session.name + ' copied')
+                              const newSession = createSession({
+                                name: session.name + ' copied',
+                                model: session.model
+                              })
                               newSession.messages = session.messages
                               store.createChatSession(newSession, ix)
                             }}
@@ -440,10 +449,30 @@ function Main() {
                   </SortableContext>
                 </DndContext>
               </MenuList>
-
               <Divider />
-
               <MenuList>
+              <MenuItem
+                >
+                  <ListItemIcon>
+                    <IconButton><SettingsIcon fontSize="small" /></IconButton>
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Select
+                      label="Model"
+                      id="model-select"
+                      value={model}
+                      onChange={(e) => changeModel(e.target.value)}>
+                      {Models.map((model) => (
+                        <MenuItem key={model} value={model}>
+                          {model}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </ListItemText>
+                  <Typography variant="body2" color="text.secondary">
+                    {/* ⌘N */}
+                  </Typography>
+                </MenuItem>
                 <MenuItem onClick={handleCreateNewSession} >
                   <ListItemIcon>
                     <IconButton><AddIcon fontSize="small" /></IconButton>

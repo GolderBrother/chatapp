@@ -12,6 +12,7 @@ export interface Session{
     name: string
     messages: Message[]
     starred?: boolean
+    model: string;
 }
 
 export interface Settings {
