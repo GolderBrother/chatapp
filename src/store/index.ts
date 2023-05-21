@@ -9,6 +9,9 @@ import { useTranslation } from "react-i18next";
 import { createSession } from '../components/Message/utils';
 import { DEFAULT_MODEL } from '../contants/model';
 import { DEFAULT_SESSION_TITLE } from '../contants/defaults';
+import gpt3 from '../assets/chat/gpt3.png';
+import gpt4 from '../assets/chat/gpt4.png';
+import gpt35 from '../assets/chat/gpt-3.5.svg';
 
 // setting store
 
@@ -175,11 +178,11 @@ export default function useStore() {
   }
   const getSessionInfo = (model: string = DEFAULT_MODEL) => {
     const sessionInfo = {
-      icon: '',
+      icon: gpt35,
       title: DEFAULT_SESSION_TITLE,
       midTitle: ''
     };
-    switch(model) {
+    switch (model) {
       case 'gpt-3.5-turbo':
         sessionInfo.title = 'chatgpt(3.5)';
         break
@@ -188,23 +191,29 @@ export default function useStore() {
         break
       case 'gpt-4':
         sessionInfo.title = 'gpt4';
+        sessionInfo.icon = gpt4;
         break
       case 'gpt-4-0314':
         sessionInfo.title = 'gpt4(0314)';
+        sessionInfo.icon = gpt4;
         break
       case 'gpt-4-32k':
         sessionInfo.title = 'gpt4(32k)';
+        sessionInfo.icon = gpt4;
         break
       case 'gpt-4-32k-0314':
         sessionInfo.title = 'gpt4(32k-0314)';
+        sessionInfo.icon = gpt4;
         break
     }
     return sessionInfo;
   }
   const createEmptyChatSession = () => {
+    const { title: name, icon } = getSessionInfo(settings.model) ?? {};
     createChatSession(createSession({
-      name: getSessionInfo(settings.model).title,
-      model: settings.model
+      name,
+      model: settings.model,
+      icon,
     }))
   }
 

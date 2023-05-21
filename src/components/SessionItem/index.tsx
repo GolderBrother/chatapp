@@ -3,16 +3,16 @@ import {
   ListItemText, MenuItem, Divider,
   IconButton, Typography, ListItemIcon,
 } from '@mui/material';
-import { Message, Session } from '../types'
+import { Message, Session } from '../../types'
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import EditIcon from '@mui/icons-material/Edit';
-import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import StyledMenu from './StyledMenu';
+import StyledMenu from '../StyledMenu';
 import { useTranslation } from "react-i18next";
 import StarIcon from '@mui/icons-material/Star';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
+import './index.scss';
 
 const { useState } = React
 
@@ -62,7 +62,10 @@ export default function SessionItem(props: Props) {
       }}
     >
       <ListItemIcon>
-        <IconButton><ChatBubbleOutlineOutlinedIcon fontSize="small" /></IconButton>
+        <IconButton>
+          <img className='session-icon' src={session.icon} alt="icon" />
+          {/* <ChatBubbleOutlineOutlinedIcon fontSize="small" /> */}
+        </IconButton>
       </ListItemIcon>
       <ListItemText>
         <Typography variant="inherit" noWrap>

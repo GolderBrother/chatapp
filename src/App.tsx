@@ -13,8 +13,8 @@ import { createSession, createMessage } from './components/Message/utils';
 import useStore from './store'
 import SettingWindow from './components/SettingWindow'
 import ChatConfigWindow from './components/ChatConfigWindow'
-import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ModelTrainingSharpIcon from '@mui/icons-material/ModelTrainingSharp';
 import AddIcon from '@mui/icons-material/Add';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import * as prompts from './prompts';
@@ -369,7 +369,7 @@ function Main() {
             <Stack
               className='ToolBar'
               sx={{
-                width: '230px',
+                width: '260px',
                 height: '100%',
                 [theme.breakpoints.down("sm")]: {
                   position: 'absolute',
@@ -451,10 +451,11 @@ function Main() {
               </MenuList>
               <Divider />
               <MenuList>
-              <MenuItem
+                <MenuItem
                 >
                   <ListItemIcon>
-                    <IconButton><SettingsIcon fontSize="small" /></IconButton>
+                    <IconButton><ModelTrainingSharpIcon fontSize="small" />
+                    </IconButton>
                   </ListItemIcon>
                   <ListItemText>
                     <Select
@@ -498,7 +499,6 @@ function Main() {
                     {/* ⌘N */}
                   </Typography>
                 </MenuItem>
-
                 <MenuItem onClick={() => setOpenAboutWindow(true)}>
                   <ListItemIcon>
                     <IconButton>
@@ -548,7 +548,8 @@ function Main() {
                 }
               </IconButton>
               <IconButton edge="start" color="inherit" aria-label="menu" sx={{ ml: 1 }}>
-                <ChatBubbleOutlineOutlinedIcon />
+                {/* <ChatBubbleOutlineOutlinedIcon /> */}
+                <img className='session-icon' src={store.currentSession.icon} alt="icon" />
               </IconButton>
               <Typography variant="h6" color="inherit" component="div" noWrap
                 sx={{
