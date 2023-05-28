@@ -12,6 +12,7 @@ import { DEFAULT_SESSION_TITLE } from '../contants/defaults';
 import gpt3 from '../assets/chat/gpt3.png';
 import gpt4 from '../assets/chat/gpt4.png';
 import gpt35 from '../assets/chat/gpt-3.5.svg';
+import { RoleMap } from '../components/Message/model';
 
 // setting store
 
@@ -208,12 +209,13 @@ export default function useStore() {
     }
     return sessionInfo;
   }
-  const createEmptyChatSession = () => {
+  const createEmptyChatSession = (roleType = RoleMap.DEFAULT) => {
     const { title: name, icon } = getSessionInfo(settings.model) ?? {};
     createChatSession(createSession({
       name,
       model: settings.model,
       icon,
+      roleType
     }))
   }
 

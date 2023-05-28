@@ -15,8 +15,8 @@ import useStore from './store'
 import SettingWindow from './components/SettingWindow'
 import ChatConfigWindow from './components/ChatConfigWindow'
 import SettingsIcon from '@mui/icons-material/Settings';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ModelTrainingSharpIcon from '@mui/icons-material/ModelTrainingSharp';
-import AddIcon from '@mui/icons-material/Add';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import * as prompts from './prompts';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
@@ -58,6 +58,7 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableItem } from './components/SortableItem';
+import { RoleInfoList, RoleMap } from './components/Message/model';
 
 function Main() {
   const { t } = useTranslation()
@@ -337,8 +338,8 @@ function Main() {
     store.setSettings({ ...store.settings, model });
   };
   const sessionListRef = useRef<HTMLDivElement>(null)
-  const handleCreateNewSession = () => {
-    store.createEmptyChatSession()
+  const handleCreateNewSession = (roleType = RoleMap.DEFAULT) => {
+    store.createEmptyChatSession(roleType)
     if (sessionListRef.current) {
       sessionListRef.current.scrollTo(0, 0)
     }
@@ -370,6 +371,30 @@ function Main() {
       paddingRight: '0 !important',
     },
   }));
+  const rows = 4; // 总行数
+  const cols = 2; // 总列数
+  // 生成按钮
+  const buttons = RoleInfoList.map((roleItem, index) => <Grid item xs={12} sm={12} md={12} lg={12} xl={12} key={index}>
+    <Button size="small" startIcon={<DeleteIcon />} variant="outlined"
+      onClick={() => handleCreateNewSession(roleItem.type)}
+    >{roleItem.text}</Button>
+  </Grid>); // 存放按钮的数组
+
+  // 生成布局
+  const RoleListLayout = [];
+  for (let i = 0; i < cols; i++) {
+    const start = i * rows;
+    const end = start + rows;
+    RoleListLayout.push(
+      <Grid container direction="row"
+        justifyContent="center"
+        alignItems="center" spacing={2} key={i}
+        >
+        {buttons.slice(start, end)}
+      </Grid>
+    );
+  }
+
   return (
     <Box className='App'>
       <Grid container sx={{
@@ -415,7 +440,7 @@ function Main() {
                   Chatapp
                 </Typography>
               </Toolbar>
-              {/* 新建聊天回话 */}
+              {/* 新建聊天会话 */}
               <MenuList>
                 <MenuItem
                 >
@@ -430,7 +455,7 @@ function Main() {
                     {/* ⌘N */}
                   </Typography>
                   {/* startIcon={<AddIcon fontSize="small" />} */}
-                  <Button variant="outlined" onClick={handleCreateNewSession}>
+                  <Button variant="outlined" onClick={() => handleCreateNewSession()}>
                     {t('new chat')}
                   </Button>
                 </MenuItem>
@@ -492,6 +517,20 @@ function Main() {
                     }
                   </SortableContext>
                 </DndContext>
+              </MenuList>
+              {/* 角色区 */}
+              <MenuList
+                style={{
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                }}
+              >
+                角色
+                <ListItemIcon>
+                  {
+                    RoleListLayout
+                  }
+                </ListItemIcon>
               </MenuList>
               <Divider />
               <MenuList>
