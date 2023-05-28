@@ -6,8 +6,9 @@ import {
   Toolbar, Box, Badge, Snackbar,
   List, ListSubheader, ListItemText, MenuList,
   IconButton, Button, ButtonGroup, Stack, Grid, MenuItem, ListItemIcon, Typography, Divider,
-  TextField, useTheme, useMediaQuery, debounce, Select
+  TextField, useTheme, useMediaQuery, debounce, Select, SelectProps
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Session, Message } from './types'
 import { createSession, createMessage } from './components/Message/utils';
 import useStore from './store'
@@ -347,6 +348,28 @@ function Main() {
   const handleTextareaFocus = useCallback(() => {
     textareaRef?.current?.focus();
   }, []);
+  const ModelSelect = styled((props: SelectProps) => <Select
+    autoWidth
+    label="Model"
+    id="model-select"
+    value={model}
+    onChange={(e) => changeModel(String(e.target.value))}
+    {...props}
+  >
+    {Models.map((model) => (
+      <MenuItem key={model} value={model}>
+        {model}
+      </MenuItem>
+    ))}
+  </Select>)(({ theme }) => ({
+    padding: '0px 8px',
+    minWidth: '110px',
+    maxWidth: '120px',
+    '& > div[role="button"]': {
+      padding: '6px 8px',
+      paddingRight: '0 !important',
+    },
+  }));
   return (
     <Box className='App'>
       <Grid container sx={{
@@ -369,8 +392,9 @@ function Main() {
             <Stack
               className='ToolBar'
               sx={{
-                width: '260px',
+                width: '300px',
                 height: '100%',
+                justifyContent: 'space-between',
                 [theme.breakpoints.down("sm")]: {
                   position: 'absolute',
                   zIndex: 1,
@@ -391,7 +415,27 @@ function Main() {
                   Chatapp
                 </Typography>
               </Toolbar>
-
+              {/* 新建聊天回话 */}
+              <MenuList>
+                <MenuItem
+                >
+                  <ListItemIcon>
+                    <IconButton><ModelTrainingSharpIcon fontSize="small" />
+                    </IconButton>
+                  </ListItemIcon>
+                  <ListItemText>
+                    <ModelSelect />
+                  </ListItemText>
+                  <Typography variant="body2" color="text.secondary">
+                    {/* ⌘N */}
+                  </Typography>
+                  {/* startIcon={<AddIcon fontSize="small" />} */}
+                  <Button variant="outlined" onClick={handleCreateNewSession}>
+                    {t('new chat')}
+                  </Button>
+                </MenuItem>
+              </MenuList>
+              {/* 会话列表 */}
               <MenuList
                 sx={{
                   width: '100%',
@@ -451,7 +495,7 @@ function Main() {
               </MenuList>
               <Divider />
               <MenuList>
-                <MenuItem
+                {/* <MenuItem
                 >
                   <ListItemIcon>
                     <IconButton><ModelTrainingSharpIcon fontSize="small" />
@@ -459,6 +503,7 @@ function Main() {
                   </ListItemIcon>
                   <ListItemText>
                     <Select
+                      autoWidth
                       label="Model"
                       id="model-select"
                       value={model}
@@ -470,9 +515,9 @@ function Main() {
                       ))}
                     </Select>
                   </ListItemText>
-                  <Typography variant="body2" color="text.secondary">
-                    {/* ⌘N */}
-                  </Typography>
+                  <Button variant="contained" startIcon={<AddIcon fontSize="small" />} onClick={handleCreateNewSession}>
+                    {t('new chat')}
+                  </Button>
                 </MenuItem>
                 <MenuItem onClick={handleCreateNewSession} >
                   <ListItemIcon>
@@ -481,10 +526,7 @@ function Main() {
                   <ListItemText>
                     {t('new chat')}
                   </ListItemText>
-                  <Typography variant="body2" color="text.secondary">
-                    {/* ⌘N */}
-                  </Typography>
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem onClick={() => {
                   setOpenSettingWindow(true)
                 }}
